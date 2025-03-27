@@ -1,5 +1,4 @@
 #include "../include/philosophers.h"
-#include <unistd.h>
 
 long	set_timestamp(void)
 {
@@ -114,7 +113,6 @@ void    take_forks(t_philosopher *philosopher)
 			;
 	}
 }
-
 
 bool	someone_starved(t_philosopher *philosopher)
 {

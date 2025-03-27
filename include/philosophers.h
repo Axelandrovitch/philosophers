@@ -52,6 +52,7 @@ typedef struct s_philo
 	int				time_to_eat;
 	long			start_timestamp;
 	t_philosopher 	*philosophers;
+	t_program_status	*program;
 } t_philo;
 
 bool	parse_arguments(t_philo *philo, char **argv, t_program_status *program);
