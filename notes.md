@@ -57,3 +57,34 @@ after the actual death of the philosopher.
 • Again, philosophers should avoid dying!
 
 Your program must not have any data races.
+
+./philo 4 310 200 100
+-------------------------------------------------------------------------
+timestamp: 0 ms philosopher 1 took philosopher's 4 fork
+timestamp: 0 ms philosopher 1 took his fork
+timestamp: 0 ms philosopher 1 is eating
+timestamp: 0 ms philosopher 2 took his fork
+timestamp: 200 ms philosopher 1 released his fork
+timestamp: 200 ms philosopher 1 released philosopher's 4 fork
+timestamp: 200 ms philosopher 1 is sleeping
+timestamp: 200 ms philosopher 2 took philosopher's 1 fork
+timestamp: 200 ms philosopher 2 is eating
+timestamp: 200 ms philosopher 4 took his fork
+timestamp: 200 ms philosopher 4 took philosopher's 3 fork
+timestamp: 200 ms philosopher 4 is eating
+timestamp: 300 ms philosopher 1 is thinking
+timestamp: 400 ms philosopher 2 released his fork
+timestamp: 400 ms philosopher 2 released philosopher's 1 fork
+timestamp: 400 ms philosopher 2 is sleeping
+timestamp: 400 ms philosopher 3 took philosopher's 2 fork
+timestamp: 400 ms philosopher 4 released his fork
+timestamp: 400 ms philosopher 4 released philosopher's 3 fork
+timestamp: 400 ms philosopher 4 is sleeping
+timestamp: 400 ms philosopher 1 took philosopher's 4 fork
+timestamp: 400 ms philosopher 1 took his fork
+timestamp: 400 ms philosopher 1 died
+timestamp: 400 ms philosopher 3 died
+
+ceci est problèmatique, un seul philosophe devrait mourir.
+Pourquoi ?
+Faudrait-il gérer différemment le check de l'état de vie des philosophes ?
