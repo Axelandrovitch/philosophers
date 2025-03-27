@@ -10,12 +10,12 @@ long	set_timestamp(void)
 	return (miliseconds);
 }
 
-void	timestamp_action(t_philosopher *philosopher)
+void	timestamp_action(t_philosopher *p)
 {
 	long	now;
 
 	now = set_timestamp();
-	printf("%ld thread for philosopher %d has been created\n", now - philosopher->start_time, philosopher->id);
+	printf("%ld thread for p %d has been created\n", now - p->start_time, p->id);
 }
 
 void	create_threads(t_philo *philo)
@@ -50,110 +50,291 @@ void	join_threads(t_philo *philo)
 	}
 }
 
-void    release_forks(t_philosopher *philosopher)
+// void    release_forks(t_p *p)
+// {
+//     pthread_mutex_unlock(&p->fork);
+//     printf("timestamp: %ld ms p %d released his fork\n", set_timestamp() - p->start_time, p->id);
+//     if (p != p->right)
+//     {
+//     	pthread_mutex_unlock(&p->right->fork);
+//     	printf("timestamp: %ld ms p %d released p's %d fork\n", set_timestamp() - p->start_time, p->id, p->right->id);
+//     }
+// }
+
+void	release_left_fork(t_philosopher *p)
 {
-    pthread_mutex_unlock(&philosopher->fork);
-    printf("timestamp: %ld ms philosopher %d released his fork\n", set_timestamp() - philosopher->start_time, philosopher->id);
-    if (philosopher != philosopher->right)
-    {
-    	pthread_mutex_unlock(&philosopher->right->fork);
-    	printf("timestamp: %ld ms philosopher %d released philosopher's %d fork\n", set_timestamp() - philosopher->start_time, philosopher->id, philosopher->right->id);
-    }
+	pthread_mutex_lock(&p->program->mutex_stop);
+	if (p->program->stop)
+	{
+		pthread_mutex_lock(&p->program->mutex_stop);
+		return ;
+	}
+	pthread_mutex_unlock(&p->left->fork);
+    printf("timestamp: %ld ms p %d released his fork\n", set_timestamp() - p->start_time, p->id);
+	pthread_mutex_unlock(&p->program->mutex_stop);
+}
+void	release_right_fork(t_philosopher *p)
+{
+	pthread_mutex_lock(&p->program->mutex_stop);
+	if (p->program->stop)
+	{
+		pthread_mutex_lock(&p->program->mutex_stop);
+		return ;
+	}
+	pthread_mutex_unlock(&p->right->fork);
+    printf("timestamp: %ld ms p %d released p's %d fork\n", set_timestamp() - p->start_time, p->id, p->right->id);
+	pthread_mutex_unlock(&p->program->mutex_stop);
 }
 
-void    take_forks(t_philosopher *philosopher)
+void	take_left_fork(t_philosopher *p)
 {
-	if (philosopher->id % 2 == 0)
-	{
-		pthread_mutex_lock(&philosopher->fork);
-		if (someone_starved(philosopher))
+	if (p->id % 2 == 0)
+		usleep(100);
+	pthread_mutex_lock(&p->program->mutex_stop);
+	if (p->program->stop)
 		{
-			pthread_mutex_unlock(&philosopher->fork);
+			pthread_mutex_unlock(&p->program->mutex_stop);
 			return ;
 		}
-		printf("timestamp: %ld ms philosopher %d took his fork\n", set_timestamp() - philosopher->start_time, philosopher->id);
-		if (philosopher != philosopher->right)
-			{
-				pthread_mutex_lock(&philosopher->right->fork);
-				if (someone_starved(philosopher))
-				{
-					pthread_mutex_unlock(&philosopher->fork);
-					pthread_mutex_unlock(&philosopher->right->fork);
-					return ;
-				}
-				printf("timestamp: %ld ms philosopher %d took philosopher's %d fork\n", set_timestamp() - philosopher->start_time, philosopher->id, philosopher->right->id);
-			}
+	pthread_mutex_lock(&p->fork);
+	printf("timestamp: %ld ms p %d took his fork\n", set_timestamp() - p->start_time, p->id);
+	pthread_mutex_unlock(&p->program->mutex_stop);
+}
+
+void	take_right_fork(t_philosopher *p)
+{
+	pthread_mutex_lock(&p->program->mutex_stop);
+	if (p->program->stop)
+	{
+		pthread_mutex_unlock(&p->program->mutex_stop);
+		return ;
+	}
+	if (starved(p, true))
+	{
+		p->program->stop = true;
+		pthread_mutex_unlock(&p->program->mutex_stop);
+		return ;
+	}
+	pthread_mutex_lock(&p->right->fork);
+ 	printf("timestamp: %ld ms p %d took p's %d fork\n", set_timestamp() - p->start_time, p->id, p->right->id);
+	pthread_mutex_unlock(&p->program->mutex_stop);
+}
+
+void	take_forks(t_philosopher *p)
+{
+	if (p->id % 2 == 0)
+		usleep(100);
+	pthread_mutex_lock(&p->program->mutex_stop);
+	if (p->program->stop)
+	{
+		pthread_mutex_unlock(&p->program->mutex_stop);
+		return ;
+	}
+	if (starved(p, true))
+	{
+		p->program->stop = true;
+		pthread_mutex_unlock(&p->program->mutex_stop);
+		return ;
+	}
+	// pthread_mutex_lock(&p->fork);
+	// printf("timestamp: %ld ms philosopher %d took his fork\n", set_timestamp() - p->start_time, p->id);
+	// pthread_mutex_lock(&p->right->fork);
+ 	// printf("timestamp: %ld ms philosopher %d took philosopher's %d fork\n", set_timestamp() - p->start_time, p->id, p->right->id);
+	pthread_mutex_unlock(&p->program->mutex_stop);
+	if (p->id % 2 == 0)
+	{
+		pthread_mutex_lock(&p->right->fork);
+		printf("timestamp: %ld ms philosopher %d took philosopher's %d fork\n",
+			   set_timestamp() - p->start_time, p->id, p->right->id);
+
+		pthread_mutex_lock(&p->fork);
+		printf("timestamp: %ld ms philosopher %d took his fork\n",
+			   set_timestamp() - p->start_time, p->id);
 	}
 	else
 	{
-		if (philosopher != philosopher->right)
-			{
-				pthread_mutex_lock(&philosopher->right->fork);
-				if (someone_starved(philosopher))
-				{
-					pthread_mutex_unlock(&philosopher->right->fork);
-					return ;
-				}
-				printf("timestamp: %ld ms philosopher %d took philosopher's %d fork\n", set_timestamp() - philosopher->start_time, philosopher->id, philosopher->right->id);
-			}
-		pthread_mutex_lock(&philosopher->fork);
-		if (someone_starved(philosopher))
-		{
-			pthread_mutex_unlock(&philosopher->fork);
-			if (philosopher != philosopher->right)
-				pthread_mutex_unlock(&philosopher->right->fork);
-			return ;
-		}
-		printf("timestamp: %ld ms philosopher %d took his fork\n", set_timestamp() - philosopher->start_time, philosopher->id);
-	}
-	if (philosopher == philosopher->right)
-	{
-		release_forks(philosopher);
-		while (!starved(philosopher, false))
-			;
+		pthread_mutex_lock(&p->fork);
+		printf("timestamp: %ld ms philosopher %d took his fork\n",
+			   set_timestamp() - p->start_time, p->id);
+		pthread_mutex_lock(&p->right->fork);
+		printf("timestamp: %ld ms philosopher %d took philosopher's %d fork\n",
+			   set_timestamp() - p->start_time, p->id, p->right->id);
 	}
 }
 
-bool	someone_starved(t_philosopher *philosopher)
+void    release_forks(t_philosopher *p)
 {
-	pthread_mutex_lock(&philosopher->program->mutex_stop);
-	if (philosopher->program->stop)
+	pthread_mutex_lock(&p->program->mutex_stop);
+	if (p->program->stop)
 	{
-		pthread_mutex_unlock(&philosopher->program->mutex_stop);
-		return (true);
+		pthread_mutex_unlock(&p->program->mutex_stop);
+		return ;
 	}
-	pthread_mutex_unlock(&philosopher->program->mutex_stop);
-	return (false);
+	if (starved(p, true))
+	{
+		p->program->stop = true;
+		pthread_mutex_unlock(&p->program->mutex_stop);
+		return ;
+	}
+	pthread_mutex_unlock(&p->program->mutex_stop);
+    pthread_mutex_unlock(&p->fork);
+    printf("timestamp: %ld ms philosopher %d released his fork\n", set_timestamp() - p->start_time, p->id);
+    if (p!= p->right)
+    {
+    	pthread_mutex_unlock(&p->right->fork);
+    	printf("timestamp: %ld ms philosopher %d released philosopher's %d fork\n", set_timestamp() - p->start_time, p->id, p->right->id);
+    }
 }
+// void	simple_take_forks(t_p *p)
+// {
+// 	if (p->id % 2 == 0)
+// 		usleep(100);
+// 	pthread_mutex_lock(&p->fork);
+// 	if (p->program->stop) {
+// 		pthread_mutex_unlock(&p->fork);
+// 		return ;
+// 	}
+// 	if (p == p->right)
+// 	{
+// 		release_forks(p);	
+// 		while (!starved_two(p, false))
+// 			;
+// 			return ;
+// 	}
+// 	printf("timestamp: %ld ms p %d took his fork\n", set_timestamp() - p->start_time, p->id);
+// 	pthread_mutex_lock(&p->right->fork);
+// 	if (someone_starved(p))
+// 	{
+// 		pthread_mutex_unlock(&p->fork);
+// 		pthread_mutex_unlock(&p->right->fork);
+// 		return ;
+// 	}
+// 	printf("timestamp: %ld ms p %d took p's %d fork\n", set_timestamp() - p->start_time, p->id, p->right->id);
+// }
+
+// void    take_forks(t_p *p)
+// {
+// 	if (p->id % 2 == 0)
+// 	{
+// 		pthread_mutex_lock(&p->fork);
+// 		if (someone_starved(p))
+// 		{
+// 			pthread_mutex_unlock(&p->fork);
+// 			return ;
+// 		}
+// 		printf("timestamp: %ld ms p %d took his fork\n", set_timestamp() - p->start_time, p->id);
+// 		if (p != p->right)
+// 			{
+// 				pthread_mutex_lock(&p->right->fork);
+// 				if (someone_starved(p))
+// 				{
+// 					pthread_mutex_unlock(&p->fork);
+// 					pthread_mutex_unlock(&p->right->fork);
+// 					return ;
+// 				}
+// 				printf("timestamp: %ld ms p %d took p's %d fork\n", set_timestamp() - p->start_time, p->id, p->right->id);
+// 			}
+// 	}
+// 	else
+// 	{
+// 		if (p != p->right)
+// 			{
+// 				pthread_mutex_lock(&p->right->fork);
+// 				if (someone_starved(p))
+// 				{
+// 					pthread_mutex_unlock(&p->right->fork);
+// 					return ;
+// 				}
+// 				printf("timestamp: %ld ms p %d took p's %d fork\n", set_timestamp() - p->start_time, p->id, p->right->id);
+// 			}
+// 		pthread_mutex_lock(&p->fork);
+// 		if (someone_starved(p))
+// 		{
+// 			pthread_mutex_unlock(&p->fork);
+// 			if (p != p->right)
+// 				pthread_mutex_unlock(&p->right->fork);
+// 			return ;
+// 		}
+// 		printf("timestamp: %ld ms p %d took his fork\n", set_timestamp() - p->start_time, p->id);
+// 	}
+// 	if (p == p->right)
+// 	{
+// 		release_forks(p);
+// 		while (!starved_two(p, false))
+// 			;
+// 	}
+// }
+
+// bool	someone_starved(t_p *p)
+// {
+// 	pthread_mutex_lock(&p->program->mutex_stop);
+// 	if (p->program->stop)
+// 	{
+// 		pthread_mutex_unlock(&p->program->mutex_stop);
+// 		return (true);
+// 	}
+// 	pthread_mutex_unlock(&p->program->mutex_stop);
+// 	return (false);
+// }
+
 
 void	*philosopher_routine(void *arg)
 {
-	t_philosopher	*philosopher;
+	t_philosopher	*p;
 
-	philosopher = (t_philosopher *)arg;
+	p = (t_philosopher *)arg;
 	while (true)
 	{
-		if (starved(philosopher, true) || someone_starved(philosopher))
+		pthread_mutex_lock(&p->program->mutex_stop);
+		if (p->program->stop)
+		{
+			pthread_mutex_unlock(&p->program->mutex_stop);
 			return (NULL);
-		take_forks(philosopher);
-		if (starved(philosopher, true) || someone_starved(philosopher))
+		}
+		if (starved(p, true))
+		{
+			p->program->stop = true;
+			pthread_mutex_unlock(&p->program->mutex_stop);
 			return (NULL);
-		eating(philosopher);
-		if (starved(philosopher, true) || someone_starved(philosopher))
-			return (NULL);
-		release_forks(philosopher);
-		if (starved(philosopher, true) || someone_starved(philosopher))
-			return (NULL);
-		sleeping(philosopher);
-		if (starved(philosopher, true) || someone_starved(philosopher))
-			return (NULL);
-		thinking(philosopher);
-		if (starved(philosopher, true) || someone_starved(philosopher))
-			return (NULL);
+		}
+		pthread_mutex_unlock(&p->program->mutex_stop);
+		take_forks(p);
+		eating(p);
+		release_forks(p);
+		sleeping(p);
+		thinking(p);
 		usleep(100);
 	}
 	return (NULL);
 }
+// void	*p_routine(void *arg)
+// {
+// 	t_p	*p;
+
+// 	p = (t_p *)arg;
+// 	while (true)
+// 	{
+// 		if (starved_two(p, true))
+// 			return (NULL);
+// 		simple_take_forks(p);
+// 		if (starved_two(p, true))
+// 			return (NULL);
+// 		eating(p);
+// 		if (starved_two(p, true))
+// 			return (NULL);
+// 		release_forks(p);
+// 		if (starved_two(p, true))
+// 			return (NULL);
+// 		sleeping(p);
+// 		if (starved_two(p, true))
+// 			return (NULL);
+// 		thinking(p);
+// 		if (starved_two(p, true))
+// 			return (NULL);
+// 		usleep(100);
+// 	}
+// 	return (NULL);
+// }
 	// eat: On regènère la barre de vie au début de l'état eating
 	// sleep: on dort pendant une durée determinée.
 	// Problème: Il faut pouvoir dire quand un philosophe meurt dans son sommeil

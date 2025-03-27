@@ -80,6 +80,8 @@ void	eating(t_philosopher *philosopher);
 
 bool	starved(t_philosopher *philosopher, bool print_message);
 
-bool	someone_starved(t_philosopher *philosopher);
+bool	starved_two(t_philosopher *philosopher, bool print_message);
+
+//bool	someone_starved(t_philosopher *philosopher);
 
 #endif
