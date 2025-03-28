@@ -50,76 +50,6 @@ void	join_threads(t_philo *philo)
 	}
 }
 
-// void    release_forks(t_p *p)
-// {
-//     pthread_mutex_unlock(&p->fork);
-//     printf("timestamp: %ld ms p %d released his fork\n", set_timestamp() - p->start_time, p->id);
-//     if (p != p->right)
-//     {
-//     	pthread_mutex_unlock(&p->right->fork);
-//     	printf("timestamp: %ld ms p %d released p's %d fork\n", set_timestamp() - p->start_time, p->id, p->right->id);
-//     }
-// }
-
-void	release_left_fork(t_philosopher *p)
-{
-	pthread_mutex_lock(&p->program->mutex_stop);
-	if (p->program->stop)
-	{
-		pthread_mutex_lock(&p->program->mutex_stop);
-		return ;
-	}
-	pthread_mutex_unlock(&p->left->fork);
-    printf("timestamp: %ld ms p %d released his fork\n", set_timestamp() - p->start_time, p->id);
-	pthread_mutex_unlock(&p->program->mutex_stop);
-}
-void	release_right_fork(t_philosopher *p)
-{
-	pthread_mutex_lock(&p->program->mutex_stop);
-	if (p->program->stop)
-	{
-		pthread_mutex_lock(&p->program->mutex_stop);
-		return ;
-	}
-	pthread_mutex_unlock(&p->right->fork);
-    printf("timestamp: %ld ms p %d released p's %d fork\n", set_timestamp() - p->start_time, p->id, p->right->id);
-	pthread_mutex_unlock(&p->program->mutex_stop);
-}
-
-void	take_left_fork(t_philosopher *p)
-{
-	if (p->id % 2 == 0)
-		usleep(100);
-	pthread_mutex_lock(&p->program->mutex_stop);
-	if (p->program->stop)
-		{
-			pthread_mutex_unlock(&p->program->mutex_stop);
-			return ;
-		}
-	pthread_mutex_lock(&p->fork);
-	printf("timestamp: %ld ms p %d took his fork\n", set_timestamp() - p->start_time, p->id);
-	pthread_mutex_unlock(&p->program->mutex_stop);
-}
-
-void	take_right_fork(t_philosopher *p)
-{
-	pthread_mutex_lock(&p->program->mutex_stop);
-	if (p->program->stop)
-	{
-		pthread_mutex_unlock(&p->program->mutex_stop);
-		return ;
-	}
-	if (starved(p, true))
-	{
-		p->program->stop = true;
-		pthread_mutex_unlock(&p->program->mutex_stop);
-		return ;
-	}
-	pthread_mutex_lock(&p->right->fork);
- 	printf("timestamp: %ld ms p %d took p's %d fork\n", set_timestamp() - p->start_time, p->id, p->right->id);
-	pthread_mutex_unlock(&p->program->mutex_stop);
-}
-
 void	take_forks(t_philosopher *p)
 {
 	if (p->id % 2 == 0)
@@ -136,10 +66,6 @@ void	take_forks(t_philosopher *p)
 		pthread_mutex_unlock(&p->program->mutex_stop);
 		return ;
 	}
-	// pthread_mutex_lock(&p->fork);
-	// printf("timestamp: %ld ms philosopher %d took his fork\n", set_timestamp() - p->start_time, p->id);
-	// pthread_mutex_lock(&p->right->fork);
- 	// printf("timestamp: %ld ms philosopher %d took philosopher's %d fork\n", set_timestamp() - p->start_time, p->id, p->right->id);
 	pthread_mutex_unlock(&p->program->mutex_stop);
 	if (p->id % 2 == 0)
 	{
@@ -185,98 +111,6 @@ void    release_forks(t_philosopher *p)
     	printf("timestamp: %ld ms philosopher %d released philosopher's %d fork\n", set_timestamp() - p->start_time, p->id, p->right->id);
     }
 }
-// void	simple_take_forks(t_p *p)
-// {
-// 	if (p->id % 2 == 0)
-// 		usleep(100);
-// 	pthread_mutex_lock(&p->fork);
-// 	if (p->program->stop) {
-// 		pthread_mutex_unlock(&p->fork);
-// 		return ;
-// 	}
-// 	if (p == p->right)
-// 	{
-// 		release_forks(p);	
-// 		while (!starved_two(p, false))
-// 			;
-// 			return ;
-// 	}
-// 	printf("timestamp: %ld ms p %d took his fork\n", set_timestamp() - p->start_time, p->id);
-// 	pthread_mutex_lock(&p->right->fork);
-// 	if (someone_starved(p))
-// 	{
-// 		pthread_mutex_unlock(&p->fork);
-// 		pthread_mutex_unlock(&p->right->fork);
-// 		return ;
-// 	}
-// 	printf("timestamp: %ld ms p %d took p's %d fork\n", set_timestamp() - p->start_time, p->id, p->right->id);
-// }
-
-// void    take_forks(t_p *p)
-// {
-// 	if (p->id % 2 == 0)
-// 	{
-// 		pthread_mutex_lock(&p->fork);
-// 		if (someone_starved(p))
-// 		{
-// 			pthread_mutex_unlock(&p->fork);
-// 			return ;
-// 		}
-// 		printf("timestamp: %ld ms p %d took his fork\n", set_timestamp() - p->start_time, p->id);
-// 		if (p != p->right)
-// 			{
-// 				pthread_mutex_lock(&p->right->fork);
-// 				if (someone_starved(p))
-// 				{
-// 					pthread_mutex_unlock(&p->fork);
-// 					pthread_mutex_unlock(&p->right->fork);
-// 					return ;
-// 				}
-// 				printf("timestamp: %ld ms p %d took p's %d fork\n", set_timestamp() - p->start_time, p->id, p->right->id);
-// 			}
-// 	}
-// 	else
-// 	{
-// 		if (p != p->right)
-// 			{
-// 				pthread_mutex_lock(&p->right->fork);
-// 				if (someone_starved(p))
-// 				{
-// 					pthread_mutex_unlock(&p->right->fork);
-// 					return ;
-// 				}
-// 				printf("timestamp: %ld ms p %d took p's %d fork\n", set_timestamp() - p->start_time, p->id, p->right->id);
-// 			}
-// 		pthread_mutex_lock(&p->fork);
-// 		if (someone_starved(p))
-// 		{
-// 			pthread_mutex_unlock(&p->fork);
-// 			if (p != p->right)
-// 				pthread_mutex_unlock(&p->right->fork);
-// 			return ;
-// 		}
-// 		printf("timestamp: %ld ms p %d took his fork\n", set_timestamp() - p->start_time, p->id);
-// 	}
-// 	if (p == p->right)
-// 	{
-// 		release_forks(p);
-// 		while (!starved_two(p, false))
-// 			;
-// 	}
-// }
-
-// bool	someone_starved(t_p *p)
-// {
-// 	pthread_mutex_lock(&p->program->mutex_stop);
-// 	if (p->program->stop)
-// 	{
-// 		pthread_mutex_unlock(&p->program->mutex_stop);
-// 		return (true);
-// 	}
-// 	pthread_mutex_unlock(&p->program->mutex_stop);
-// 	return (false);
-// }
-
 
 void	*philosopher_routine(void *arg)
 {
@@ -307,35 +141,3 @@ void	*philosopher_routine(void *arg)
 	}
 	return (NULL);
 }
-// void	*p_routine(void *arg)
-// {
-// 	t_p	*p;
-
-// 	p = (t_p *)arg;
-// 	while (true)
-// 	{
-// 		if (starved_two(p, true))
-// 			return (NULL);
-// 		simple_take_forks(p);
-// 		if (starved_two(p, true))
-// 			return (NULL);
-// 		eating(p);
-// 		if (starved_two(p, true))
-// 			return (NULL);
-// 		release_forks(p);
-// 		if (starved_two(p, true))
-// 			return (NULL);
-// 		sleeping(p);
-// 		if (starved_two(p, true))
-// 			return (NULL);
-// 		thinking(p);
-// 		if (starved_two(p, true))
-// 			return (NULL);
-// 		usleep(100);
-// 	}
-// 	return (NULL);
-// }
-	// eat: On regènère la barre de vie au début de l'état eating
-	// sleep: on dort pendant une durée determinée.
-	// Problème: Il faut pouvoir dire quand un philosophe meurt dans son sommeil
-	// think: ne prend pas de durée définie

@@ -82,21 +82,3 @@ bool	starved(t_philosopher *p, bool print_message)
 	}
 	return (false);
 }
-
-bool	starved_two(t_philosopher *philosopher, bool print_message)
-{
-	long	current_time;
-
-	current_time = set_timestamp();
-	if (current_time - philosopher->last_meal >= philosopher->time_to_die)
-	{
-		pthread_mutex_lock(&philosopher->program->mutex_stop);
-		philosopher->program->stop = true;
-		pthread_mutex_unlock(&philosopher->program->mutex_stop);
-		if (print_message)
-			printf("timestamp: %ld ms philosopher %d died\n", current_time - philosopher->start_time, philosopher->id);
-		philosopher->is_dead = true;
-		return (true);
-	}
-	return (false);
-}
