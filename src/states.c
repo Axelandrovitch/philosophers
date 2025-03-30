@@ -2,19 +2,8 @@
 
 void	thinking(t_philosopher *p)
 {
-	pthread_mutex_lock(&p->program->mutex_stop);
-	if (p->program->stop)
-	{
-		pthread_mutex_unlock(&p->program->mutex_stop);
+	if (stop_banquet(p))
 		return ;
-	}
-	if (starved(p, true))
-	{
-		p->program->stop = true;
-		pthread_mutex_unlock(&p->program->mutex_stop);
-		return ;
-	}
-	pthread_mutex_unlock(&p->program->mutex_stop);
 	long	current_time;
 
 	p->is_thinking = true;
@@ -24,19 +13,8 @@ void	thinking(t_philosopher *p)
 
 void	sleeping(t_philosopher *p)
 {
-	pthread_mutex_lock(&p->program->mutex_stop);
-	if (p->program->stop)
-	{
-		pthread_mutex_unlock(&p->program->mutex_stop);
+	if (stop_banquet(p))
 		return ;
-	}
-	if (starved(p, true))
-	{
-		p->program->stop = true;
-		pthread_mutex_unlock(&p->program->mutex_stop);
-		return ;
-	}
-	pthread_mutex_unlock(&p->program->mutex_stop);
 	long	current_time;
 
 	p->is_sleeping = true;
@@ -47,19 +25,8 @@ void	sleeping(t_philosopher *p)
 
 void	eating(t_philosopher *p)
 {
-	pthread_mutex_lock(&p->program->mutex_stop);
-	if (p->program->stop)
-	{
-		pthread_mutex_unlock(&p->program->mutex_stop);
+	if (stop_banquet(p))
 		return ;
-	}
-	if (starved(p, true))
-	{
-		p->program->stop = true;
-		pthread_mutex_unlock(&p->program->mutex_stop);
-		return ;
-	}
-	pthread_mutex_unlock(&p->program->mutex_stop);
 	long	current_time;
 	p->is_eating = true;
 	current_time = set_timestamp();

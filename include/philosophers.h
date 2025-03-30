@@ -82,6 +82,6 @@ bool	starved(t_philosopher *philosopher, bool print_message);
 
 bool	starved_two(t_philosopher *philosopher, bool print_message);
 
-//bool	someone_starved(t_philosopher *philosopher);
+bool	stop_banquet(t_philosopher *p);
 
 #endif

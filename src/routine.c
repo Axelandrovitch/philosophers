@@ -10,14 +10,6 @@ long	set_timestamp(void)
 	return (miliseconds);
 }
 
-void	timestamp_action(t_philosopher *p)
-{
-	long	now;
-
-	now = set_timestamp();
-	printf("%ld thread for p %d has been created\n", now - p->start_time, p->id);
-}
-
 void	create_threads(t_philo *philo)
 {
 	t_philosopher	*current;
@@ -50,23 +42,28 @@ void	join_threads(t_philo *philo)
 	}
 }
 
-void	take_forks(t_philosopher *p)
+bool	stop_banquet(t_philosopher *p)
 {
-	if (p->id % 2 == 0)
-		usleep(100);
 	pthread_mutex_lock(&p->program->mutex_stop);
 	if (p->program->stop)
 	{
 		pthread_mutex_unlock(&p->program->mutex_stop);
-		return ;
+		return (true);
 	}
 	if (starved(p, true))
 	{
 		p->program->stop = true;
 		pthread_mutex_unlock(&p->program->mutex_stop);
-		return ;
+		return (true);
 	}
 	pthread_mutex_unlock(&p->program->mutex_stop);
+	return (false);
+}
+
+void	take_forks(t_philosopher *p)
+{
+	if (stop_banquet(p))
+		return ;
 	if (p->id % 2 == 0)
 	{
 		pthread_mutex_lock(&p->right->fork);
@@ -90,19 +87,8 @@ void	take_forks(t_philosopher *p)
 
 void    release_forks(t_philosopher *p)
 {
-	pthread_mutex_lock(&p->program->mutex_stop);
-	if (p->program->stop)
-	{
-		pthread_mutex_unlock(&p->program->mutex_stop);
+	if (stop_banquet(p))
 		return ;
-	}
-	if (starved(p, true))
-	{
-		p->program->stop = true;
-		pthread_mutex_unlock(&p->program->mutex_stop);
-		return ;
-	}
-	pthread_mutex_unlock(&p->program->mutex_stop);
     pthread_mutex_unlock(&p->fork);
     printf("timestamp: %ld ms philosopher %d released his fork\n", set_timestamp() - p->start_time, p->id);
     if (p!= p->right)
@@ -119,25 +105,13 @@ void	*philosopher_routine(void *arg)
 	p = (t_philosopher *)arg;
 	while (true)
 	{
-		pthread_mutex_lock(&p->program->mutex_stop);
-		if (p->program->stop)
-		{
-			pthread_mutex_unlock(&p->program->mutex_stop);
+		if (stop_banquet(p))
 			return (NULL);
-		}
-		if (starved(p, true))
-		{
-			p->program->stop = true;
-			pthread_mutex_unlock(&p->program->mutex_stop);
-			return (NULL);
-		}
-		pthread_mutex_unlock(&p->program->mutex_stop);
 		take_forks(p);
 		eating(p);
 		release_forks(p);
 		sleeping(p);
 		thinking(p);
-		usleep(100);
 	}
 	return (NULL);
 }
