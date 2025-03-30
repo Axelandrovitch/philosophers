@@ -1,43 +1,32 @@
 #include "../include/philosophers.h"
 
-void	destroy_mutexes(t_philo *philo) {
-	t_philosopher	*current_philosopher;
-	int	i;
-
-	current_philosopher = philo->philosophers;
-	i = 0;
-	while (i < philo->number_of_philosophers)
-	{
-		pthread_mutex_destroy(&current_philosopher->fork);
-		i++;	
-		current_philosopher = current_philosopher->left;
-	}
-}
-
-void	init_banquet(t_philo *philo)
+void	banquet(t_philosopher *philosophers)
 {
-	create_threads(philo);
-	join_threads(philo);
-	destroy_mutexes(philo);
-	pthread_mutex_destroy(&philo->program->mutex_stop);
+	create_threads(philosophers);
+	join_threads(philosophers);
+	pthread_mutex_destroy(&philosophers->program->mutex_stop);
 }
 
 int	main(int argc, char **argv)
 {
-	t_philo philo;
-	t_program_status program;
+	t_philosopher *philosophers;
+	t_program_status program_status;
 
-	if (argc != 5)
+	if (argc != 5 && argc != 6)
 	{
 		printf("Usage: <%s> <number of philosophers> <time to die> <time to eat> <time to sleep>\n", argv[0]);
 		return (0);
 	}
-	pthread_mutex_init(&program.mutex_stop, NULL);
-	program.stop = false;
-	philo.program = &program;
-	parse_arguments(&philo, argv, &program);
+	pthread_mutex_init(&program_status.mutex_stop, NULL);
+	program_status.stop = false;
+	if (!parse_arguments(&philosophers, argv, &program_status))
+	{
+		printf("Could not parse arguments\n");
+		return 1;
+	}
+	print_philosophers(philosophers);
 	printf("-------------------------------------------------------------------------\n");
-	init_banquet(&philo);
-	free_philosophers(philo.philosophers);
+	banquet(philosophers);
+	free_philosophers(philosophers);
 	return (0);
 }

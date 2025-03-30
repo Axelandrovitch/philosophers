@@ -72,7 +72,7 @@ long	ft_atol(const char *nptr)
 	return (n * sign);
 }
 
-t_philosopher	*init_philosopher(int id, t_philo *philo)
+t_philosopher	*init_philosopher(int id, t_input_data *data) 
 {
 	t_philosopher *philosopher;
 
@@ -80,13 +80,10 @@ t_philosopher	*init_philosopher(int id, t_philo *philo)
 	if (!philosopher)
 		return NULL;
 	philosopher->id = id;
-	philosopher->is_eating = false;
-	philosopher->is_dead = false;
-	philosopher->is_sleeping = false;
-	philosopher->is_thinking = false;
-	philosopher->time_to_sleep = philo->time_to_sleep;
-	philosopher->time_to_die = philo->time_to_die;
-	philosopher->time_to_eat = philo->time_to_eat;
+	philosopher->time_to_sleep = data->time_to_sleep;
+	philosopher->time_to_die = data->time_to_die;
+	philosopher->time_to_eat = data->time_to_eat;
+	philosopher->number_of_philosophers = data->number_of_philosophers;
 	philosopher->last_meal = 0;
 	philosopher->left = NULL;
 	philosopher->right = NULL;
@@ -104,7 +101,7 @@ void	*free_philosophers(t_philosopher *head)
 	{
 		tmp = current;
 		current = current->left;
-		pthread_mutex_destroy(&current->fork);
+		pthread_mutex_destroy(&tmp->fork);
 		free(tmp);
 	}
 	free(current);
@@ -130,39 +127,39 @@ void	add_node_to_list(t_philosopher **head, t_philosopher **tail, t_philosopher 
 		}
 }
 
-t_philosopher	*init_philosophers(t_philo *philo, t_program_status *program)
+t_philosopher	*init_philosophers(t_input_data *data, t_program_status *program)
 {
 	t_philosopher *head;
 	t_philosopher *tail;
 	t_philosopher *new_node;
-	int	i;
+	int	id;
 	long	start_time;
 
 	head = NULL;
 	tail = NULL;
-	i = 1;
+	id = 1;
 	start_time = set_timestamp();
-	while (i <= philo->number_of_philosophers)
+	while (id <= data->number_of_philosophers)
 	{
-		new_node = init_philosopher(i, philo);
+		new_node = init_philosopher(id, data);
 		if (!new_node)
 			return (free_philosophers(head));
 		new_node->start_time = start_time;
 		new_node->last_meal= start_time;
 		new_node->program = program;
 		add_node_to_list(&head, &tail, new_node);
-		i++;
+		id++;
 	}
 	return (head);
 }
 
-void	print_philosophers(t_philo *philo,t_philosopher *head)
+void	print_philosophers(t_philosopher *head)
 {
 	t_philosopher *current;
 	current = head;
 	int	i;
 	i = 0;
-	while (i < philo->number_of_philosophers)
+	while (i < current->number_of_philosophers)
 	{
 		printf("I am philosopher ID: %d\n", current->id);
 		printf("On my left is philosopher ID: %d\n", current->left->id);
@@ -171,22 +168,20 @@ void	print_philosophers(t_philo *philo,t_philosopher *head)
 		i++;
 	}
 }
-
-bool	parse_arguments(t_philo *philo, char **argv, t_program_status *program)
+bool	parse_arguments(t_philosopher **philosophers,char **argv, t_program_status *program)
 {
-	t_philosopher 	*philosophers;
+	t_input_data	data;
 
 	if (!is_valid_str(argv[1]) || !is_valid_str(argv[2]) || !is_valid_str(argv[3]))
 		return (false);
-	philo->number_of_philosophers = ft_atol(argv[1]);
-	philo->time_to_die = ft_atol(argv[2]);
-	philo->time_to_eat= ft_atol(argv[3]);
-	philo->time_to_sleep = ft_atol(argv[4]);
-	if (philo->number_of_philosophers < 1 || philo->time_to_die < 0 || philo->time_to_sleep < 0)
+	data.number_of_philosophers = ft_atol(argv[1]);
+	data.time_to_die = ft_atol(argv[2]);
+	data.time_to_eat = ft_atol(argv[3]);
+	data.time_to_sleep = ft_atol(argv[4]);
+	if (data.number_of_philosophers < 1 || data.time_to_die < 0 || data.time_to_sleep < 0)
 		return (false);
-	philosophers = init_philosophers(philo, program);
+	*philosophers = init_philosophers(&data, program);
 	if (!philosophers)
 		return (false);
-	philo->philosophers = philosophers;
 	return (true);
 }

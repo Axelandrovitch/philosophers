@@ -10,14 +10,14 @@ long	set_timestamp(void)
 	return (miliseconds);
 }
 
-void	create_threads(t_philo *philo)
+void	create_threads(t_philosopher *philosophers)
 {
 	t_philosopher	*current;
 	int				i;
 
-	current = philo->philosophers;
+	current = philosophers;
 	i = 0;
-	while (i < philo->number_of_philosophers)
+	while (i < current->number_of_philosophers)
 	{
 		if (pthread_create(&current->thread, NULL, philosopher_routine, (void *)current))
 			return ;
@@ -26,14 +26,14 @@ void	create_threads(t_philo *philo)
 	}
 }
 
-void	join_threads(t_philo *philo)
+void	join_threads(t_philosopher *philosophers)
 {
 	t_philosopher	*current;
 	int	i;
 
-	current = philo->philosophers;
+	current = philosophers;
 	i = 0;
-	while (i < philo->number_of_philosophers)
+	while (i < current->number_of_philosophers)
 	{
 		if (pthread_join(current->thread, NULL))
 			return ;

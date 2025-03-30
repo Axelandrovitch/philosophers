@@ -19,6 +19,14 @@
 # include <stdbool.h>
 # include <stdlib.h>
 
+typedef struct s_input_data {
+	int				number_of_philosophers;
+	int				time_to_die;
+	int				time_to_sleep;
+	int				time_to_eat;
+	long			start_timestamp;
+} t_input_data;
+
 typedef struct s_program_status
 {
 	bool			stop;
@@ -32,40 +40,26 @@ typedef struct s_philosopher
 	int		time_to_eat;
 	int		time_to_sleep;
 	int		time_to_die;
+	int				number_of_philosophers;
 	struct 	s_philosopher *left;
 	struct 	s_philosopher *right;
 	pthread_mutex_t       fork;
-	bool	is_eating;
-	bool	is_sleeping;
-	bool	is_thinking;
-	bool	is_dead;
 	long	start_time;
 	long	last_meal;
 	t_program_status	*program;
 } t_philosopher;
 
-typedef struct s_philo
-{
-	int				number_of_philosophers;
-	int				time_to_die;
-	int				time_to_sleep;
-	int				time_to_eat;
-	long			start_timestamp;
-	t_philosopher 	*philosophers;
-	t_program_status	*program;
-} t_philo;
+bool	parse_arguments(t_philosopher **philosophers,char **argv, t_program_status *program);
 
-bool	parse_arguments(t_philo *philo, char **argv, t_program_status *program);
-
-void	print_philosophers(t_philo *philo,t_philosopher *head);
+void	print_philosophers(t_philosopher *head);
 
 void	*free_philosophers(t_philosopher *head);
 
 void	*philosopher_routine(void *arg);
 
-void	create_threads(t_philo *philo);
+void	create_threads(t_philosopher *philosophers);
 
-void	join_threads(t_philo *philo);
+void	join_threads(t_philosopher *philosophers);
 
 long	set_timestamp(void);
 

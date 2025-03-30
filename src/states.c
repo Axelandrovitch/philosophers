@@ -6,7 +6,6 @@ void	thinking(t_philosopher *p)
 		return ;
 	long	current_time;
 
-	p->is_thinking = true;
 	current_time = set_timestamp();
 	printf("timestamp: %ld ms philosopher %d is thinking\n", current_time - p->start_time, p->id);
 }
@@ -17,7 +16,6 @@ void	sleeping(t_philosopher *p)
 		return ;
 	long	current_time;
 
-	p->is_sleeping = true;
 	current_time = set_timestamp();
 	printf("timestamp: %ld ms philosopher %d is sleeping\n", current_time - p->start_time, p->id);
 	usleep(p->time_to_sleep * 1000);
@@ -28,12 +26,10 @@ void	eating(t_philosopher *p)
 	if (stop_banquet(p))
 		return ;
 	long	current_time;
-	p->is_eating = true;
 	current_time = set_timestamp();
 	printf("timestamp: %ld ms philosopher %d is eating\n", current_time - p->start_time, p->id);
 	p->last_meal = current_time;
 	usleep(p->time_to_eat * 1000);
-	p->is_eating = false;
 }
 
 bool	starved(t_philosopher *p, bool print_message)
