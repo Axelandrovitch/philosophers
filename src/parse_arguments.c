@@ -85,6 +85,8 @@ t_philosopher	*init_philosopher(int id, t_input_data *data)
 	philosopher->time_to_eat = data->time_to_eat;
 	philosopher->number_of_philosophers = data->number_of_philosophers;
 	philosopher->last_meal = 0;
+	philosopher->meals_count = 0;
+	philosopher->must_eat_n = data->must_eat_n;
 	philosopher->left = NULL;
 	philosopher->right = NULL;
 	pthread_mutex_init(&philosopher->fork, NULL);
@@ -164,11 +166,15 @@ void	print_philosophers(t_philosopher *head)
 		printf("I am philosopher ID: %d\n", current->id);
 		printf("On my left is philosopher ID: %d\n", current->left->id);
 		printf("On my right is philosopher ID: %d\n", current->right->id);
+		printf("I eat meals: %d\n", current->meals_count);
+		printf("time to die : %d\n", current->time_to_die);
+		printf("time to eat : %d\n", current->time_to_eat);
 		current = current->left;
 		i++;
 	}
 }
-bool	parse_arguments(t_philosopher **philosophers,char **argv, t_program_status *program)
+
+bool	parse_arguments(t_philosopher **p,char **argv, int argc, t_program_status *program)
 {
 	t_input_data	data;
 
@@ -178,10 +184,17 @@ bool	parse_arguments(t_philosopher **philosophers,char **argv, t_program_status 
 	data.time_to_die = ft_atol(argv[2]);
 	data.time_to_eat = ft_atol(argv[3]);
 	data.time_to_sleep = ft_atol(argv[4]);
-	if (data.number_of_philosophers < 1 || data.time_to_die < 0 || data.time_to_sleep < 0)
+	if (argc == 6)
+	{
+		data.must_eat_n = ft_atol(argv[5]);
+		data.count_each = true;
+	}
+	else if (argc == 5)
+		data.count_each = false;
+	if (data.number_of_philosophers < 1 || data.time_to_die < 0 || data.time_to_sleep < 0 || data.must_eat_n < 0)
 		return (false);
-	*philosophers = init_philosophers(&data, program);
-	if (!philosophers)
+	*p= init_philosophers(&data, program);
+	if (!p)
 		return (false);
 	return (true);
 }

@@ -50,6 +50,12 @@ bool	stop_banquet(t_philosopher *p)
 		pthread_mutex_unlock(&p->program->mutex_stop);
 		return (true);
 	}
+	if (p->program->fed_up_philosophers == p->number_of_philosophers)
+	{
+		p->program->stop = true;
+		pthread_mutex_unlock(&p->program->mutex_stop);
+		return (true);
+	}
 	if (starved(p, true))
 	{
 		p->program->stop = true;
@@ -85,16 +91,18 @@ void	take_forks(t_philosopher *p)
 	}
 }
 
-void    release_forks(t_philosopher *p)
+void    release_forks(t_philosopher *p, bool print_message)
 {
-	if (stop_banquet(p))
-		return ;
+	// if (stop_banquet(p))
+	// 	return ;
     pthread_mutex_unlock(&p->fork);
-    printf("timestamp: %ld ms philosopher %d released his fork\n", set_timestamp() - p->start_time, p->id);
+	if (print_message)
+    	printf("timestamp: %ld ms philosopher %d released his fork\n", set_timestamp() - p->start_time, p->id);
     if (p!= p->right)
     {
     	pthread_mutex_unlock(&p->right->fork);
-    	printf("timestamp: %ld ms philosopher %d released philosopher's %d fork\n", set_timestamp() - p->start_time, p->id, p->right->id);
+		if (print_message)
+    		printf("timestamp: %ld ms philosopher %d released philosopher's %d fork\n", set_timestamp() - p->start_time, p->id, p->right->id);
     }
 }
 
@@ -108,9 +116,24 @@ void	*philosopher_routine(void *arg)
 		if (stop_banquet(p))
 			return (NULL);
 		take_forks(p);
+		if (stop_banquet(p))
+		{
+			release_forks(p, false);
+			return (NULL);
+		}
 		eating(p);
-		release_forks(p);
+		if (stop_banquet(p))
+		{
+			release_forks(p, false);
+			return (NULL);
+		} else {
+			release_forks(p, true);
+		}
+		if (stop_banquet(p))
+			return (NULL);
 		sleeping(p);
+		if (stop_banquet(p))
+			return (NULL);
 		thinking(p);
 	}
 	return (NULL);

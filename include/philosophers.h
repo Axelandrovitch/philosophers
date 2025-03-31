@@ -24,12 +24,15 @@ typedef struct s_input_data {
 	int				time_to_die;
 	int				time_to_sleep;
 	int				time_to_eat;
+	int				must_eat_n;
+	bool			count_each;
 	long			start_timestamp;
 } t_input_data;
 
 typedef struct s_program_status
 {
 	bool			stop;
+	int				fed_up_philosophers;
 	pthread_mutex_t	mutex_stop;
 } t_program_status;
 
@@ -40,6 +43,8 @@ typedef struct s_philosopher
 	int		time_to_eat;
 	int		time_to_sleep;
 	int		time_to_die;
+	int		meals_count;
+	int				must_eat_n;
 	int				number_of_philosophers;
 	struct 	s_philosopher *left;
 	struct 	s_philosopher *right;
@@ -49,7 +54,7 @@ typedef struct s_philosopher
 	t_program_status	*program;
 } t_philosopher;
 
-bool	parse_arguments(t_philosopher **philosophers,char **argv, t_program_status *program);
+bool	parse_arguments(t_philosopher **p,char **argv, int argc, t_program_status *program);
 
 void	print_philosophers(t_philosopher *head);
 

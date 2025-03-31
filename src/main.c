@@ -1,5 +1,6 @@
 #include "../include/philosophers.h"
 
+
 void	banquet(t_philosopher *philosophers)
 {
 	create_threads(philosophers);
@@ -19,14 +20,15 @@ int	main(int argc, char **argv)
 	}
 	pthread_mutex_init(&program_status.mutex_stop, NULL);
 	program_status.stop = false;
-	if (!parse_arguments(&philosophers, argv, &program_status))
+	program_status.fed_up_philosophers = 0;
+	if (!parse_arguments(&philosophers, argv, argc, &program_status))
 	{
 		printf("Could not parse arguments\n");
-		return 1;
+		return (1);
 	}
-	print_philosophers(philosophers);
 	printf("-------------------------------------------------------------------------\n");
 	banquet(philosophers);
+	print_philosophers(philosophers);
 	free_philosophers(philosophers);
 	return (0);
 }
