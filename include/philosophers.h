@@ -49,6 +49,7 @@ typedef struct s_philosopher
 	struct 	s_philosopher *left;
 	struct 	s_philosopher *right;
 	pthread_mutex_t       fork;
+	// pthread_mutex_t       mutex_last_meal;
 	long	start_time;
 	long	last_meal;
 	t_program_status	*program;
@@ -81,6 +82,6 @@ bool	starved(t_philosopher *philosopher, bool print_message);
 
 bool	starved_two(t_philosopher *philosopher, bool print_message);
 
-bool	stop_banquet(t_philosopher *p);
+bool	stop_banquet(t_philosopher *p, bool release);
 
 #endif

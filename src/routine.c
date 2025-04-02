@@ -2,12 +2,12 @@
 
 long	set_timestamp(void)
 {
-	struct timeval	current_time;
-	gettimeofday(&current_time, NULL);
-	long	seconds = current_time.tv_sec;
-	long	microseconds = current_time.tv_usec;
-	long	miliseconds = (long)seconds * 1000 + (long)microseconds / 1000;
-	return (miliseconds);
+	struct timeval	time;
+	gettimeofday(&time, NULL);
+	// long	seconds = current_time.tv_sec;
+	// long	microseconds = current_time.tv_usec;
+	// long	miliseconds = (long)seconds * 1000 + (long)microseconds / 1000;
+	return (time.tv_sec * 1000 + time.tv_usec / 1000);
 }
 
 void	create_threads(t_philosopher *philosophers)
@@ -42,68 +42,160 @@ void	join_threads(t_philosopher *philosophers)
 	}
 }
 
-bool	stop_banquet(t_philosopher *p)
+void	lonely_philosopher(t_philosopher *p)
 {
-	pthread_mutex_lock(&p->program->mutex_stop);
-	if (p->program->stop)
-	{
-		pthread_mutex_unlock(&p->program->mutex_stop);
-		return (true);
-	}
-	if (p->program->fed_up_philosophers == p->number_of_philosophers)
-	{
-		p->program->stop = true;
-		pthread_mutex_unlock(&p->program->mutex_stop);
-		return (true);
-	}
-	if (starved(p, true))
-	{
-		p->program->stop = true;
-		pthread_mutex_unlock(&p->program->mutex_stop);
-		return (true);
-	}
-	pthread_mutex_unlock(&p->program->mutex_stop);
-	return (false);
+	pthread_mutex_lock(&p->fork);
+	printf("timestamp: %ld ms philosopher %d took his fork\n",
+			set_timestamp() - p->start_time, p->id);
+	while (!starved(p, false))
+		;
+	pthread_mutex_unlock(&p->fork);
 }
 
 void	take_forks(t_philosopher *p)
 {
-	if (stop_banquet(p))
+	pthread_mutex_lock(&p->fork);
+	pthread_mutex_lock(&p->program->mutex_stop);
+	if (p->program->stop)
+         {
+             pthread_mutex_unlock(&p->program->mutex_stop);
+             pthread_mutex_unlock(&p->fork);
+             return ;
+         }
+	pthread_mutex_unlock(&p->program->mutex_stop);
+	printf("%ld %d has taken his fork\n",
+		   set_timestamp() - p->start_time, p->id);
+	pthread_mutex_lock(&p->right->fork);
+	pthread_mutex_lock(&p->program->mutex_stop);
+	if (p->program->stop)
+	{
+		pthread_mutex_unlock(&p->program->mutex_stop);
+		pthread_mutex_unlock(&p->fork);
+		pthread_mutex_unlock(&p->right->fork);
 		return ;
-	if (p->id % 2 == 0)
-	{
-		pthread_mutex_lock(&p->right->fork);
-		printf("timestamp: %ld ms philosopher %d took philosopher's %d fork\n",
-			   set_timestamp() - p->start_time, p->id, p->right->id);
-
-		pthread_mutex_lock(&p->fork);
-		printf("timestamp: %ld ms philosopher %d took his fork\n",
-			   set_timestamp() - p->start_time, p->id);
 	}
-	else
-	{
-		pthread_mutex_lock(&p->fork);
-		printf("timestamp: %ld ms philosopher %d took his fork\n",
-			   set_timestamp() - p->start_time, p->id);
-		pthread_mutex_lock(&p->right->fork);
-		printf("timestamp: %ld ms philosopher %d took philosopher's %d fork\n",
-			   set_timestamp() - p->start_time, p->id, p->right->id);
-	}
+	printf("%ld %d has taken right fork\n",
+		   set_timestamp() - p->start_time, p->id);
+	pthread_mutex_unlock(&p->program->mutex_stop);
 }
+
+// void take_forks(t_philosopher *p)
+// {
+//     // For even-numbered philosophers: take right fork first.
+//     if (p->id % 2 == 0)
+//     {
+//         // Acquire right fork.
+//         pthread_mutex_lock(&p->right->fork);
+//         // Immediately check stop flag.
+//         pthread_mutex_lock(&p->program->mutex_stop);
+//         if (p->program->stop)
+//         {
+//             pthread_mutex_unlock(&p->program->mutex_stop);
+//             pthread_mutex_unlock(&p->right->fork);
+//             return;
+//         }
+//         pthread_mutex_unlock(&p->program->mutex_stop);
+//         printf("%ld %d has taken right fork\n", set_timestamp() - p->start_time, p->id);
+//
+//         // Acquire left fork.
+//         pthread_mutex_lock(&p->fork);
+//         pthread_mutex_lock(&p->program->mutex_stop);
+//         if (p->program->stop)
+//         {
+//             pthread_mutex_unlock(&p->program->mutex_stop);
+//             // Release already acquired forks.
+//             pthread_mutex_unlock(&p->fork);
+//             pthread_mutex_unlock(&p->right->fork);
+//             return;
+//         }
+//         pthread_mutex_unlock(&p->program->mutex_stop);
+//         printf("%ld %d has taken his fork\n", set_timestamp() - p->start_time, p->id);
+//     }
+//     else
+//     {
+//         // For odd-numbered philosophers: take left fork first.
+//         pthread_mutex_lock(&p->fork);
+//         pthread_mutex_lock(&p->program->mutex_stop);
+//         if (p->program->stop)
+//         {
+//             pthread_mutex_unlock(&p->program->mutex_stop);
+//             pthread_mutex_unlock(&p->fork);
+//             return;
+//         }
+//         pthread_mutex_unlock(&p->program->mutex_stop);
+//         printf("%ld %d has taken his fork\n", set_timestamp() - p->start_time, p->id);
+//
+//         pthread_mutex_lock(&p->right->fork);
+//         pthread_mutex_lock(&p->program->mutex_stop);
+//         if (p->program->stop)
+//         {
+//             pthread_mutex_unlock(&p->program->mutex_stop);
+//             // Release already acquired forks.
+//             pthread_mutex_unlock(&p->right->fork);
+//             pthread_mutex_unlock(&p->fork);
+//             return;
+//         }
+//         pthread_mutex_unlock(&p->program->mutex_stop);
+//         printf("%ld %d has taken right fork\n", set_timestamp() - p->start_time, p->id);
+//     }
+// }
+
 
 void    release_forks(t_philosopher *p, bool print_message)
 {
-	// if (stop_banquet(p))
-	// 	return ;
     pthread_mutex_unlock(&p->fork);
 	if (print_message)
-    	printf("timestamp: %ld ms philosopher %d released his fork\n", set_timestamp() - p->start_time, p->id);
+    	printf("%ld %d released his fork\n", set_timestamp() - p->start_time, p->id);
     if (p!= p->right)
     {
     	pthread_mutex_unlock(&p->right->fork);
 		if (print_message)
-    		printf("timestamp: %ld ms philosopher %d released philosopher's %d fork\n", set_timestamp() - p->start_time, p->id, p->right->id);
+    		printf("%ld %d released fork\n", set_timestamp() - p->start_time, p->id);
     }
+}
+
+// bool	stop_banquet(t_philosopher *p, bool release)
+// {
+// 	pthread_mutex_lock(&p->program->mutex_stop);
+// 	if (p->program->stop)
+// 	{
+// 		pthread_mutex_unlock(&p->program->mutex_stop);
+// 		if (release)
+// 			release_forks(p,false);
+// 		return (true);
+// 	}
+// 	if (p->program->fed_up_philosophers == p->number_of_philosophers)
+// 	{
+// 		p->program->stop = true;
+// 		pthread_mutex_unlock(&p->program->mutex_stop);
+// 		if (release)
+// 			release_forks(p,false);
+// 		return (true);
+// 	}
+// 	if (starved(p, true))
+// 	{
+// 		p->program->stop = true;
+// 		pthread_mutex_unlock(&p->program->mutex_stop);
+// 		if (release)
+// 			release_forks(p,false);
+// 		return (true);
+// 	}
+// 	pthread_mutex_unlock(&p->program->mutex_stop);
+// 	return (false);
+// }
+
+bool	check_banquet_state(t_philosopher *p, bool release)
+{
+		pthread_mutex_lock(&p->program->mutex_stop);
+        if (p->program->stop)
+        {
+			if (release)
+				release_forks(p, false);
+            pthread_mutex_unlock(&p->program->mutex_stop);
+            return (false);
+        }
+        pthread_mutex_unlock(&p->program->mutex_stop);
+		return (true);
 }
 
 void	*philosopher_routine(void *arg)
@@ -111,28 +203,28 @@ void	*philosopher_routine(void *arg)
 	t_philosopher	*p;
 
 	p = (t_philosopher *)arg;
+	if (p->id % 2 == 0)
+		usleep(1000);
 	while (true)
 	{
-		if (stop_banquet(p))
+  		if (!check_banquet_state(p, false))
 			return (NULL);
+		if (p->number_of_philosophers == 1)
+		{
+			lonely_philosopher(p);
+			return (NULL);
+		}
 		take_forks(p);
-		if (stop_banquet(p))
-		{
-			release_forks(p, false);
+  		if (!check_banquet_state(p, true))
 			return (NULL);
-		}
 		eating(p);
-		if (stop_banquet(p))
-		{
-			release_forks(p, false);
+  		if (!check_banquet_state(p, true))
 			return (NULL);
-		} else {
-			release_forks(p, true);
-		}
-		if (stop_banquet(p))
+		release_forks(p, true);
+  		if (!check_banquet_state(p, false))
 			return (NULL);
 		sleeping(p);
-		if (stop_banquet(p))
+  		if (!check_banquet_state(p, false))
 			return (NULL);
 		thinking(p);
 	}

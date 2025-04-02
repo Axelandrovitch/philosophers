@@ -106,6 +106,7 @@ void	*free_philosophers(t_philosopher *head)
 		pthread_mutex_destroy(&tmp->fork);
 		free(tmp);
 	}
+	pthread_mutex_destroy(&current->fork);
 	free(current);
 	return (NULL);
 }
@@ -164,11 +165,14 @@ void	print_philosophers(t_philosopher *head)
 	while (i < current->number_of_philosophers)
 	{
 		printf("I am philosopher ID: %d\n", current->id);
-		printf("On my left is philosopher ID: %d\n", current->left->id);
-		printf("On my right is philosopher ID: %d\n", current->right->id);
-		printf("I eat meals: %d\n", current->meals_count);
-		printf("time to die : %d\n", current->time_to_die);
-		printf("time to eat : %d\n", current->time_to_eat);
+		printf("I ate %d meals\n", current->meals_count);
+		if (current->meals_count >= current->must_eat_n)
+			printf("I ate enough\n");
+		else if (current->meals_count < current->must_eat_n)
+			printf("I did not eat enough\n");
+		if (current->meals_count == current->must_eat_n)
+			printf("I ate just enough\n");
+		printf("-----------------------\n");
 		current = current->left;
 		i++;
 	}
@@ -189,8 +193,11 @@ bool	parse_arguments(t_philosopher **p,char **argv, int argc, t_program_status *
 		data.must_eat_n = ft_atol(argv[5]);
 		data.count_each = true;
 	}
-	else if (argc == 5)
+	if (argc == 5)
+	{
+		data.must_eat_n = 0;
 		data.count_each = false;
+	}
 	if (data.number_of_philosophers < 1 || data.time_to_die < 0 || data.time_to_sleep < 0 || data.must_eat_n < 0)
 		return (false);
 	*p= init_philosophers(&data, program);

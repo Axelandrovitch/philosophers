@@ -1,0 +1,54 @@
+-------------------------------------------------------------------------
+timestamp: 0 ms philosopher 1 took his fork
+timestamp: 0 ms philosopher 1 took philosopher's 4 fork
+timestamp: 0 ms philosopher 1 is eating
+timestamp: 0 ms philosopher 3 took his fork
+timestamp: 0 ms philosopher 3 took philosopher's 2 fork
+timestamp: 0 ms philosopher 3 is eating
+timestamp: 200 ms philosopher 1 released his fork
+timestamp: 200 ms philosopher 1 released philosopher's 4 fork
+timestamp: 200 ms philosopher 1 is sleeping
+timestamp: 200 ms philosopher 3 released his fork
+timestamp: 200 ms philosopher 3 released philosopher's 2 fork
+timestamp: 200 ms philosopher 3 is sleeping
+timestamp: 200 ms philosopher 2 took philosopher's 1 fork
+timestamp: 200 ms philosopher 2 took his fork
+timestamp: 200 ms philosopher 4 took philosopher's 3 fork
+timestamp: 200 ms philosopher 4 took his fork
+timestamp: 200 ms philosopher 4 is eating
+timestamp: 200 ms philosopher 2 is eating
+timestamp: 300 ms philosopher 1 is thinking
+timestamp: 300 ms philosopher 1 died
+timestamp: 300 ms philosopher 3 is thinking
+timestamp: 401 ms philosopher 4 released his fork
+timestamp: 401 ms philosopher 4 released philosopher's 3 fork
+timestamp: 401 ms philosopher 4 is sleeping
+timestamp: 401 ms philosopher 2 released his fork
+timestamp: 401 ms philosopher 2 released philosopher's 1 fork
+timestamp: 401 ms philosopher 2 is sleeping
+timestamp: 501 ms philosopher 2 is thinking
+timestamp: 501 ms philosopher 4 is thinking
+I am philosopher ID: 1
+On my left is philosopher ID: 2
+On my right is philosopher ID: 4
+I eat meals: 1
+time to die : 300
+time to eat : 200
+I am philosopher ID: 2
+On my left is philosopher ID: 3
+On my right is philosopher ID: 1
+I eat meals: 1
+time to die : 300
+time to eat : 200
+I am philosopher ID: 3
+On my left is philosopher ID: 4
+On my right is philosopher ID: 2
+I eat meals: 1
+time to die : 300
+time to eat : 200
+I am philosopher ID: 4
+On my left is philosopher ID: 1
+On my right is philosopher ID: 3
+I eat meals: 1
+time to die : 300
+time to eat : 200
